@@ -52,6 +52,10 @@ void Plot_deriv_errors(std::function<double(double)> fcn, std::function<double(d
     //set the log scale for x & y 
     gPad->SetLogx(1); gPad->SetLogy(1); 
 
+    //set margin so we can see the histo titles
+    gPad->SetLeftMargin(0.12); 
+    gPad->SetRightMargin(0.05); 
+
     //draw both of the graphs
     graph_fwd->SetTitle(Form("x = %.1f;h;relative error",x));
     graph_fwd->GetYaxis()->SetRangeUser( y_min, y_max );  
@@ -68,7 +72,7 @@ void Plot_deriv_errors(std::function<double(double)> fcn, std::function<double(d
     graph_extrap->Draw("SAME");
 
     //now let's build the legend 
-    auto legend = new TLegend(0.1,0.1, 0.5,0.3); 
+    auto legend = new TLegend(0.12,0.1, 0.5,0.3); 
 
     legend->SetHeader("Differentiation Method"); 
     
@@ -86,10 +90,7 @@ double fcn_d_cos(double x) { return -1.*sin(x); }
 
 int numerical_differentiation(const double h_min = 1e-12, const double h_max = 1e-1)
 {   
-    auto canv = new TCanvas("c", "differentiation - Exp(x)", 1600, 600);
-
-    canv->Divide(3,1); 
-
+    
     //produce the log-spaced set of values
     const size_t n_points = 200; 
     const double dx_spacing = exp((log(h_max) - log(h_min))/((double)n_points-1) ); 
@@ -98,20 +99,29 @@ int numerical_differentiation(const double h_min = 1e-12, const double h_max = 1
 
     double h = h_min; 
     for (size_t i=0; i<n_points; i++) { h_vals.push_back( h ); h *= dx_spacing; }
-    
+
+
+    //make a canvas, and draw the results of the numerical differentiation for Exp(x)
+    auto canv = new TCanvas("c", "differentiation - Exp(x)", 1600, 600);
+
+    canv->Divide(3,1); 
+
     canv->cd(1); Plot_deriv_errors(fcn_exp, fcn_exp, 0.1, h_vals); 
-    canv->cd(2); Plot_deriv_errors(fcn_exp, fcn_exp, 10., h_vals); 
+    canv->cd(2); Plot_deriv_errors(fcn_exp, fcn_exp, 1., h_vals); 
     canv->cd(3); Plot_deriv_errors(fcn_exp, fcn_exp, 100., h_vals); 
     
+    canv->cd(0); canv->SaveAs("diff_test_ExpX.png"); 
 
+    //make a new canvas, repeat the same process for Cos(x)
     canv = new TCanvas("c2", "differentiation - Cos(x)", 1600, 600);
 
     canv->Divide(3,1); 
 
     canv->cd(1); Plot_deriv_errors(fcn_cos, fcn_d_cos, 0.1, h_vals); 
-    canv->cd(2); Plot_deriv_errors(fcn_cos, fcn_d_cos, 10., h_vals); 
+    canv->cd(2); Plot_deriv_errors(fcn_cos, fcn_d_cos, 1., h_vals); 
     canv->cd(3); Plot_deriv_errors(fcn_cos, fcn_d_cos, 100., h_vals); 
     
+    canv->cd(0); canv->SaveAs("diff_test_CosX.png"); 
     
     return 0; 
 }
